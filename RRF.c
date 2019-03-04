@@ -164,7 +164,7 @@ int mythread_create (void (*fun_addr)(),int priority)
       running->ticks = QUANTUM_TICKS;
       running->state = WAITING; // When the thread low_priority is stopped by other with high_priority
       TCB* next = scheduler();
-      activator(scheduler());
+      activator(next);
     }
 
   /*********************************************End**********************************************/
