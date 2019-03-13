@@ -161,8 +161,7 @@ int mythread_create (void (*fun_addr)(),int priority)
   // if the thread is high_priority and the running thread is low_priority then high_priority run first
   if(t_state[i].priority == HIGH_PRIORITY && running->priority == LOW_PRIORITY) {
       disable_interrupt();
-      running->ticks = QUANTUM_TICKS;
-      running->state = WAITING; // When the thread low_priority is stopped by other with high_priority
+      running->ticks = QUANTUM_TICKS; //reset ticks
       TCB* next = scheduler();
       activator(next);
     }
@@ -223,44 +222,49 @@ int mythread_gettid(){
 /* Timer interrupt  */
 void timer_interrupt(int sig)
 {
-  // the running thread reduce for each timer interrupt
-  running->ticks--;
-
-  // Only for low_priority thread: when there is out of ticks, then next process in
-  if(!running->ticks && running->priority == LOW_PRIORITY){
-    disable_interrupt();
-    running->ticks = QUANTUM_TICKS; // reset the ticks
-    TCB* next = scheduler();
-    activator(next);
+  // Only for low_priority thread
+  if(running->priority == LOW_PRIORITY){
+    // reduce ticks
+    running->ticks--;
+    // when there is out of ticks, go to the scheduler
+    if(!running->ticks){
+      disable_interrupt();
+      running->ticks = QUANTUM_TICKS; // reset the ticks
+      TCB* next = scheduler();
+      activator(next);
+    }
   }
+
 
 }
 
 
 TCB* scheduler(){
 
-  // check if the queues are empty and there are no process in the queue
-  if(queue_empty(queue_highPriority)&&queue_empty(queue_lowPriority)){
+
+  // consider 3 cases:
+  //case 1. high_priority_queue_empty && low_priority_queue_empty && running FREE, then the program finish
+  //case 2. the running thread is low_priority and it has finished his ticks, but not ejecution, then enqueue
+  //case 3. the running thread is high_priority or low_priority, the low_priority thread has terminated his ticks or ejecution
+  // for those cases, first thing we do is check high_priority queue and then low_priority
+
+
+
+  // case 1. check if the queues are empty and there are no process in the queue
+  if(queue_empty(queue_highPriority)&&queue_empty(queue_lowPriority)&&running->state==FREE){
     printf("***FINISH\n");
-    exit(0);
+    exit(1);
   }
 
-
-  // When a low_priority thread was expulsed by a high_priority thread
-  if(running->state==WAITING){
-    // only low_priority thread has state WAITING, and when it happends there was a high_priority thread
-    enqueue(queue_lowPriority, running);  // go to the last of the low_priority queue
-    return dequeue(queue_highPriority);
+  // case 2. enqueue the unfinished low_priority thread
+  if(running->priority==LOW_PRIORITY&&running->state==INIT) {
+    enqueue(queue_lowPriority, running);
   }
 
-  // When a thread finished
-  if(queue_empty(queue_highPriority)!=1) { // check if there are thread in high_priority queue
+  // case 3. check high_priority queue then low_priority queue
+  if(!queue_empty(queue_highPriority)){
     return dequeue(queue_highPriority);
   }else{
-    // ROUND-ROBIN for queue_lowPriority
-    if(running->state!=FREE){
-      enqueue(queue_lowPriority, running);
-    }
     return dequeue(queue_lowPriority);
   }
 
@@ -277,21 +281,15 @@ void activator(TCB* next){
     printf("*** THREAD %i TERMINATED: SETCONTEXT OF %i \n", running->tid, next->tid);
     current = next->tid;
     running = next;
-    if(next->priority == LOW_PRIORITY){
-      enable_interrupt();
-    }
+    enable_interrupt();
     setcontext (&(next->run_env));
 
     // if the low_priority thread was expulsed
-  }else if(running->state==WAITING){
+  }else if(running->priority==LOW_PRIORITY&&next->priority==HIGH_PRIORITY){
     printf("*** THREAD %i PREEMTED: SET CONTEXT OF %i\n",running->tid, next->tid);
-    running->state = INIT; //reset the state
     current = next->tid;
     running = next;
-
-    if(next->priority == LOW_PRIORITY){
-      enable_interrupt();
-    }
+    enable_interrupt();
     swapcontext(&(aux->run_env),&(next->run_env));
 
     // if the low_priority thread has terminated his ticks but not the ejecution
@@ -299,10 +297,7 @@ void activator(TCB* next){
     printf("*** SWAPCONTEXT FROM %i TO %i\n",running->tid, next->tid);
     current = next->tid;
     running = next;
-
-    if(next -> priority == LOW_PRIORITY){
-      enable_interrupt();
-    }
+    enable_interrupt();
     swapcontext(&(aux->run_env),&(next->run_env));
   }
 }

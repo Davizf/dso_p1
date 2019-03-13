@@ -138,7 +138,7 @@ int mythread_create (void (*fun_addr)(),int priority)
 
   makecontext(&t_state[i].run_env, fun_addr, 1);
 
-/*********************************************Begin**********************************************/
+  /*********************************************Begin**********************************************/
   // we have to enqueue the theread which just created
   enqueue(queue,&t_state[i]);
   /*********************************************End**********************************************/
@@ -207,20 +207,26 @@ void timer_interrupt(int sig)
 
 
 TCB* scheduler(){
-  // if the queue is empty then end of the program
-  if(queue_empty(queue)){
+
+  // consider 4 cases:
+  //1. queue_empty and running FREE, then the program finish
+  //2. queue_empty and running INIT, then enqueue running and dequeue queue
+  //3. !queue_empty and running FREE, then dequeue queue
+  //4. !queue_empty and running INIT, then enqueue running and dequeue queue
+
+  // case 1. if the queue is empty and the last thread has terminated, then end of the program
+  if(queue_empty(queue)&&running->state==FREE){
     printf("***FINISH\n");
-    exit(0);
+    exit(1);
   }
-  // if the process has not terminated then he go to the last of the queue
-  if(running->state!=FREE){
+
+  // case 2 and case 4.
+  if(running->state==INIT){
     enqueue(queue,running);
   }
-  // The next process is the first one in the queue
-  TCB* next = dequeue(queue);
 
-  // return next thread in the queue
-  return next;
+  // case 2, 3 and 4  return next thread in the queue
+  return dequeue(queue);
 
 }
 
