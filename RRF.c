@@ -226,8 +226,8 @@ void timer_interrupt(int sig)
   if(running->priority == LOW_PRIORITY){
     // reduce ticks
     running->ticks--;
-    // when there is out of ticks, go to the scheduler
-    if(!running->ticks){
+    // when there is out of ticks and any of the queue are not empty, go to the scheduler
+    if(!running->ticks&& (!queue_empty(queue_highPriority) || !queue_empty(queue_lowPriority)) ){
       disable_interrupt();
       running->ticks = QUANTUM_TICKS; // reset the ticks
       TCB* next = scheduler();

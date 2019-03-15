@@ -10,7 +10,8 @@ Además pone todos los índices de TCB a FREE
 
 En main, setpriority configura un primero hilo "THREAD 0" init_thread_lib y este será guardado en la cola
 
-Luego se crean otros 7 hilos desde main.c, se les asignan el primer índice cuyo estado sea FREE en TCB, tras la asignación el espado pasa a ser INIT y los hilos serán encolados, en este programa no se tienen en cuenta las prioridades.
+Luego se crean otros 7 hilos desde main.c, se les asignan el primer índice cuyo estado sea FREE en TCB, tras la asignación el espado pasa a ser INIT y los hilos serán encolados,
+en este programa no se tienen en cuenta las prioridades.
 
 En la ejecución del hilo puede pasar 2 cosas, o termine su rodaja o termine su ejecución:
 - caso 1: Si termina su rodaja se encola, pasa el siguiente hilo a ejecutar
@@ -196,8 +197,8 @@ void timer_interrupt(int sig)
 {
   // the running thread reduce for each timer interrupt
   running->ticks--;
-  // when there is out of ticks, then next process in
-  if(!running->ticks){
+  // when there is out of ticks and the queue is not empty, then next process in
+  if(!running->ticks&&!queue_empty(queue)){
     disable_interrupt();
     running->ticks = QUANTUM_TICKS; // reset the ticks
     TCB* next = scheduler();
