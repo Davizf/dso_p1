@@ -205,10 +205,11 @@ void disk_interrupt(int sig)
     aux->state=INIT; // reset the state
     if(aux->priority==HIGH_PRIORITY){
       enqueue(queue_highPriority,aux);
-      // comprobar si el que ejecuta es de baja, si no pasa alta
+      // if running is low priority then it must be expulsed
       if(running->priority==LOW_PRIORITY){
         disable_interrupt();
         running->ticks = QUANTUM_TICKS; //reset ticks
+        printf("*** THREAD %i READY\n",aux->tid);
         activator(scheduler());
       }
     }else{
