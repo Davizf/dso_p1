@@ -193,6 +193,7 @@ void mythread_exit() {
   free(t_state[tid].run_env.uc_stack.ss_sp);
 
   disable_interrupt();
+  running->ticks = QUANTUM_TICKS; // reset the ticks
   TCB* next = scheduler();
   activator(next);
 
