@@ -214,8 +214,8 @@ void disk_interrupt(int sig)
       }
     }else{
       enqueue(queue_lowPriority,aux);
+      printf("*** THREAD %i READY\n",aux->tid);
     }
-    printf("*** THREAD %i READY\n",aux->tid);
   }
 }
 
