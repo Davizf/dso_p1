@@ -1,5 +1,5 @@
 /*
-@autor: daviz
+@autor: daviz & andres
 Este fichero está basado del fichero mythreadlib.c
 Los códigos que escribí están marcadas por 2 líneas separadoras:
 *********************************************Begin**********************************************
