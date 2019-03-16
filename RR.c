@@ -1,5 +1,5 @@
 /*
-@autor: daviz
+@autor: daviz & andres
 Este fichero está basado del fichero mythreadlib.c
 Los códigos que escribí están marcadas por 2 líneas separadoras:
 *********************************************Begin**********************************************
@@ -185,6 +185,7 @@ void mythread_exit() {
   free(t_state[tid].run_env.uc_stack.ss_sp);
 
   disable_interrupt();
+  running->ticks = QUANTUM_TICKS;
   TCB* next = scheduler();
   activator(next);
 
