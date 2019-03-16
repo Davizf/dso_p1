@@ -182,7 +182,7 @@ int mythread_gettid(){
 /* Read disk syscall */
 int read_disk()
 {
-  if(1/*data_in_page_cache()!=0*/){
+  if(data_in_page_cache()!=0){
     //running thread -> queue_blocking
     printf("*** THREAD %i READ FROM DISK\n",current);
     disable_interrupt();
