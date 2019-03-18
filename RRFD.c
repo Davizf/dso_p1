@@ -203,18 +203,17 @@ void disk_interrupt(int sig)
   if(!queue_empty(queue_blocking)){
     TCB* aux = dequeue(queue_blocking);
     aux->state=INIT; // reset the state
+    printf("*** THREAD %i READY\n",aux->tid);
     if(aux->priority==HIGH_PRIORITY){
       enqueue(queue_highPriority,aux);
       // if running is low priority then it must be expulsed
       if(running->priority==LOW_PRIORITY){
         disable_interrupt();
         running->ticks = QUANTUM_TICKS; //reset ticks
-        printf("*** THREAD %i READY\n",aux->tid);
         activator(scheduler());
       }
     }else{
       enqueue(queue_lowPriority,aux);
-      printf("*** THREAD %i READY\n",aux->tid);
     }
   }
 }
